@@ -5,70 +5,36 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>LOG · Mensajería</title>
 <style>
-  body {
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
-    background: #020617;
-    color: #e5e7eb;
-    margin: 0;
-    padding: 20px;
-  }
-  h1 {
-    text-align: center;
-    font-size: 1.4rem;
-    margin-bottom: 4px;
-  }
-  .firma {
-    text-align: center;
-    font-size: .75rem;
-    opacity: .5;
-    margin-bottom: 20px;
-  }
-  .card {
-    background: #020617;
-    border: 1px solid #1e293b;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 16px;
-  }
-  label {
-    display: block;
-    font-size: .85rem;
-    margin-top: 10px;
-    opacity: .85;
-  }
-  input, select {
-    width: 100%;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid #1e293b;
-    margin-top: 4px;
-    background: #020617;
-    color: #e5e7eb;
-    outline: none;
-  }
-  button {
-    width: 100%;
-    margin-top: 14px;
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    background: #2563eb;
-    color: #fff;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .envio {
-    border-top: 1px solid #1e293b;
-    padding: 12px 0;
-  }
-  .estado {
-    font-size: .8rem;
-    opacity: .8;
-  }
-  .acciones button {
-    margin-top: 6px;
-    background: #334155;
-  }
+body{
+  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
+  background:#020617;
+  color:#e5e7eb;
+  margin:0;
+  padding:20px;
+}
+h1{text-align:center;font-size:1.4rem;margin-bottom:4px;}
+.firma{text-align:center;font-size:.75rem;opacity:.5;margin-bottom:20px;}
+.card{
+  background:#020617;
+  border:1px solid #1e293b;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:16px;
+}
+label{display:block;font-size:.85rem;margin-top:10px;opacity:.85;}
+input{
+  width:100%;padding:10px;border-radius:10px;
+  border:1px solid #1e293b;margin-top:4px;
+  background:#020617;color:#e5e7eb;outline:none;
+}
+button{
+  width:100%;margin-top:14px;padding:12px;
+  border-radius:12px;border:none;
+  background:#2563eb;color:#fff;font-weight:600;cursor:pointer;
+}
+.envio{border-top:1px solid #1e293b;padding:12px 0;}
+.estado{font-size:.8rem;opacity:.8;}
+.acciones button{margin-top:6px;background:#334155;}
 </style>
 </head>
 <body>
@@ -78,6 +44,7 @@
 
 <div class="card">
   <h3>Nuevo Envío</h3>
+
   <label>Cliente</label>
   <input id="cliente" />
 
@@ -99,78 +66,86 @@
 </div>
 
 <script>
-  let envios = JSON.parse(localStorage.getItem('envios')) || [];
+let envios = JSON.parse(localStorage.getItem('envios')) || [];
 
-  function guardarEnvio() {
-    const cliente = clienteInput.value.trim();
-    const direccion = direccionInput.value.trim();
-    const mensajero = mensajeroInput.value.trim();
-    const costo = costoInput.value;
+const clienteInput   = document.getElementById('cliente');
+const direccionInput = document.getElementById('direccion');
+const mensajeroInput = document.getElementById('mensajero');
+const costoInput     = document.getElementById('costo');
+const lista          = document.getElementById('lista');
 
-    if (!cliente || !direccion || !mensajero || !costo) {
-      alert('Completa todos los campos');
-      return;
-    }
+function guardarEnvio(){
+  const cliente   = clienteInput.value.trim();
+  const direccion = direccionInput.value.trim();
+  const mensajero = mensajeroInput.value.trim();
+  const costo     = costoInput.value.trim();
 
-    envios.push({
-      cliente,
-      direccion,
-      mensajero,
-      costo,
-      estado: 'Registrado',
-      fecha: new Date().toLocaleString()
-    });
-
-    localStorage.setItem('envios', JSON.stringify(envios));
-    clienteInput.value = direccionInput.value = mensajeroInput.value = costoInput.value = '';
-    render();
+  if(!cliente || !direccion || !mensajero || !costo){
+    alert('Completa todos los campos');
+    return;
   }
 
-  function cambiarEstado(i) {
-    const estados = ['Registrado', 'En ruta', 'Entregado'];
-    const actual = estados.indexOf(envios[i].estado);
-    envios[i].estado = estados[(actual + 1) % estados.length];
-    localStorage.setItem('envios', JSON.stringify(envios));
-    render();
-  }
+  envios.push({
+    cliente,
+    direccion,
+    mensajero,
+    costo,
+    estado:'Registrado',
+    fecha:new Date().toLocaleString()
+  });
 
-  function generarPDF(i) {
-    const e = envios[i];
-    const contenido = `ENVÍO\nCliente: ${e.cliente}\nDirección: ${e.direccion}\nMensajero: ${e.mensajero}\nCosto: $${e.costo}\nEstado: ${e.estado}`;
-    const blob = new Blob([contenido], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'envio.txt';
-    a.click();
-  }
+  localStorage.setItem('envios',JSON.stringify(envios));
 
-  function render() {
-    lista.innerHTML = '';
-    envios.forEach((e, i) => {
-      const div = document.createElement('div');
-      div.className = 'envio';
-      div.innerHTML = `
-        <strong>${e.cliente}</strong><br>
-        ${e.direccion}<br>
-        👤 ${e.mensajero}<br>
-        💲 ${e.costo}<br>
-        <span class="estado">${e.estado} · ${e.fecha}</span>
-        <div class="acciones">
-          <button onclick="cambiarEstado(${i})">Cambiar estado</button>
-          <button onclick="generarPDF(${i})">Comprobante</button>
-        </div>
-      `;
-      lista.appendChild(div);
-    });
-  }
-
-  const clienteInput = document.getElementById('cliente');
-  const direccionInput = document.getElementById('direccion');
-  const mensajeroInput = document.getElementById('mensajero');
-  const costoInput = document.getElementById('costo');
-  const lista = document.getElementById('lista');
+  clienteInput.value='';
+  direccionInput.value='';
+  mensajeroInput.value='';
+  costoInput.value='';
 
   render();
+}
+
+function cambiarEstado(i){
+  const estados=['Registrado','En ruta','Entregado'];
+  const actual=estados.indexOf(envios[i].estado);
+  envios[i].estado=estados[actual+1] || estados[0];
+  localStorage.setItem('envios',JSON.stringify(envios));
+  render();
+}
+
+function generarComprobante(i){
+  const e=envios[i];
+  const texto=
+`COMPROBANTE DE ENVÍO\n\nCliente: ${e.cliente}\nDirección: ${e.direccion}\nMensajero: ${e.mensajero}\nCosto: $${e.costo}\nEstado: ${e.estado}\nFecha: ${e.fecha}`;
+
+  const blob=new Blob([texto],{type:'text/plain'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='comprobante_envio.txt';
+  a.click();
+}
+
+function render(){
+  lista.innerHTML='';
+
+  envios.forEach((e,i)=>{
+    const div=document.createElement('div');
+    div.className='envio';
+    div.innerHTML=`
+      <strong>${e.cliente}</strong><br>
+      ${e.direccion}<br>
+      👤 ${e.mensajero}<br>
+      💲 ${e.costo}<br>
+      <span class="estado">${e.estado} · ${e.fecha}</span>
+      <div class="acciones">
+        <button onclick="cambiarEstado(${i})">Cambiar estado</button>
+        <button onclick="generarComprobante(${i})">Comprobante</button>
+      </div>
+    `;
+    lista.appendChild(div);
+  });
+}
+
+render();
 </script>
 
 </body>
