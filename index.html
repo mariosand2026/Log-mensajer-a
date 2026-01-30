@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>LOG · Mensajería</title>
+<link rel="manifest" href="manifest.json">
 <style>
 body{
   font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto;
@@ -44,19 +45,14 @@ button{
 
 <div class="card">
   <h3>Nuevo Envío</h3>
-
   <label>Cliente</label>
   <input id="cliente" />
-
   <label>Dirección</label>
   <input id="direccion" />
-
   <label>Mensajero</label>
   <input id="mensajero" />
-
   <label>Costo ($)</label>
   <input id="costo" type="number" />
-
   <button onclick="guardarEnvio()">Guardar envío</button>
 </div>
 
@@ -68,99 +64,65 @@ button{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let envios = JSON.parse(localStorage.getItem('envios')) || [];
-
-const clienteInput   = document.getElementById('cliente');
+const clienteInput = document.getElementById('cliente');
 const direccionInput = document.getElementById('direccion');
 const mensajeroInput = document.getElementById('mensajero');
-const costoInput     = document.getElementById('costo');
-const lista          = document.getElementById('lista');
+const costoInput = document.getElementById('costo');
+const lista = document.getElementById('lista');
 
 function guardarEnvio(){
-  const cliente   = clienteInput.value.trim();
+  const cliente = clienteInput.value.trim();
   const direccion = direccionInput.value.trim();
   const mensajero = mensajeroInput.value.trim();
-  const costo     = costoInput.value.trim();
-
-  if(!cliente || !direccion || !mensajero || !costo){
-    alert('Completa todos los campos');
-    return;
-  }
-
-  envios.push({
-    cliente,
-    direccion,
-    mensajero,
-    costo,
-    estado:'Registrado',
-    fecha:new Date().toLocaleString()
-  });
-
+  const costo = costoInput.value.trim();
+  if(!cliente||!direccion||!mensajero||!costo){alert('Completa todos los campos');return;}
+  envios.push({cliente,direccion,mensajero,costo,estado:'Registrado',fecha:new Date().toLocaleString()});
   localStorage.setItem('envios',JSON.stringify(envios));
-
-  clienteInput.value='';
-  direccionInput.value='';
-  mensajeroInput.value='';
-  costoInput.value='';
-
+  clienteInput.value=direccionInput.value=mensajeroInput.value=costoInput.value='';
   render();
 }
-
 function cambiarEstado(i){
   const estados=['Registrado','En ruta','Entregado'];
   const actual=estados.indexOf(envios[i].estado);
-  envios[i].estado=estados[actual+1] || estados[0];
+  envios[i].estado=estados[actual+1]||estados[0];
   localStorage.setItem('envios',JSON.stringify(envios));
   render();
 }
-
 function generarPDF(i){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const e = envios[i];
-
   doc.setFontSize(16);
-  doc.text('LOG · Mensajería', 20, 20);
-
+  doc.text('LOG · Mensajería',20,20);
   doc.setFontSize(10);
-  doc.text('Artificial Intelligence', 20, 26);
-  doc.text('by Mario Andrés Narváez Delgado', 20, 32);
-
+  doc.text('Artificial Intelligence',20,26);
+  doc.text('by Mario Andrés Narváez Delgado',20,32);
   doc.setFontSize(12);
-  doc.text(`Cliente: ${e.cliente}`, 20, 50);
-  doc.text(`Dirección: ${e.direccion}`, 20, 58);
-  doc.text(`Mensajero: ${e.mensajero}`, 20, 66);
-  doc.text(`Costo: $${e.costo}`, 20, 74);
-  doc.text(`Estado: ${e.estado}`, 20, 82);
-  doc.text(`Fecha: ${e.fecha}`, 20, 90);
-
-  doc.rect(15, 42, 180, 55);
-
+  doc.text(`Cliente: ${e.cliente}`,20,50);
+  doc.text(`Dirección: ${e.direccion}`,20,58);
+  doc.text(`Mensajero: ${e.mensajero}`,20,66);
+  doc.text(`Costo: $${e.costo}`,20,74);
+  doc.text(`Estado: ${e.estado}`,20,82);
+  doc.text(`Fecha: ${e.fecha}`,20,90);
+  doc.rect(15,42,180,55);
   doc.save('comprobante_envio_LOG.pdf');
 }
-
 function render(){
   lista.innerHTML='';
-
   envios.forEach((e,i)=>{
     const div=document.createElement('div');
     div.className='envio';
-    div.innerHTML=`
-      <strong>${e.cliente}</strong><br>
-      ${e.direccion}<br>
-      👤 ${e.mensajero}<br>
-      💲 ${e.costo}<br>
-      <span class="estado">${e.estado} · ${e.fecha}</span>
-      <div class="acciones">
-        <button onclick="cambiarEstado(${i})">Cambiar estado</button>
-        <button onclick="generarPDF(${i})">PDF</button>
-      </div>
-    `;
+    div.innerHTML=`<strong>${e.cliente}</strong><br>${e.direccion}<br>👤 ${e.mensajero}<br>💲 ${e.costo}<br><span class="estado">${e.estado} · ${e.fecha}</span><div class="acciones"><button onclick="cambiarEstado(${i})">Cambiar estado</button><button onclick="generarPDF(${i})">PDF</button></div>`;
     lista.appendChild(div);
   });
 }
-
 render();
-</script>
 
+if('serviceWorker'in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').then(()=>console.log('SW registrado'));
+  });
+}
+</script>
 </body>
 </html>
