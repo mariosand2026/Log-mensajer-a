@@ -65,6 +65,7 @@ button{
   <div id="lista"></div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let envios = JSON.parse(localStorage.getItem('envios')) || [];
 
@@ -112,16 +113,29 @@ function cambiarEstado(i){
   render();
 }
 
-function generarComprobante(i){
-  const e=envios[i];
-  const texto=
-`COMPROBANTE DE ENVÍO\n\nCliente: ${e.cliente}\nDirección: ${e.direccion}\nMensajero: ${e.mensajero}\nCosto: $${e.costo}\nEstado: ${e.estado}\nFecha: ${e.fecha}`;
+function generarPDF(i){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const e = envios[i];
 
-  const blob=new Blob([texto],{type:'text/plain'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download='comprobante_envio.txt';
-  a.click();
+  doc.setFontSize(16);
+  doc.text('LOG · Mensajería', 20, 20);
+
+  doc.setFontSize(10);
+  doc.text('Artificial Intelligence', 20, 26);
+  doc.text('by Mario Andrés Narváez Delgado', 20, 32);
+
+  doc.setFontSize(12);
+  doc.text(`Cliente: ${e.cliente}`, 20, 50);
+  doc.text(`Dirección: ${e.direccion}`, 20, 58);
+  doc.text(`Mensajero: ${e.mensajero}`, 20, 66);
+  doc.text(`Costo: $${e.costo}`, 20, 74);
+  doc.text(`Estado: ${e.estado}`, 20, 82);
+  doc.text(`Fecha: ${e.fecha}`, 20, 90);
+
+  doc.rect(15, 42, 180, 55);
+
+  doc.save('comprobante_envio_LOG.pdf');
 }
 
 function render(){
@@ -138,7 +152,7 @@ function render(){
       <span class="estado">${e.estado} · ${e.fecha}</span>
       <div class="acciones">
         <button onclick="cambiarEstado(${i})">Cambiar estado</button>
-        <button onclick="generarComprobante(${i})">Comprobante</button>
+        <button onclick="generarPDF(${i})">PDF</button>
       </div>
     `;
     lista.appendChild(div);
