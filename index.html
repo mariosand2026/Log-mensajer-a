@@ -23,16 +23,8 @@ h1{text-align:center;font-size:1.4rem;margin-bottom:4px;}
   margin-bottom:16px;
 }
 label{display:block;font-size:.85rem;margin-top:10px;opacity:.85;}
-input{
-  width:100%;padding:10px;border-radius:10px;
-  border:1px solid #1e293b;margin-top:4px;
-  background:#020617;color:#e5e7eb;outline:none;
-}
-button{
-  width:100%;margin-top:14px;padding:12px;
-  border-radius:12px;border:none;
-  background:#2563eb;color:#fff;font-weight:600;cursor:pointer;
-}
+input{width:100%;padding:10px;border-radius:10px;border:1px solid #1e293b;margin-top:4px;background:#020617;color:#e5e7eb;outline:none;}
+button{width:100%;margin-top:14px;padding:12px;border-radius:12px;border:none;background:#2563eb;color:#fff;font-weight:600;cursor:pointer;}
 .envio{border-top:1px solid #1e293b;padding:12px 0;}
 .estado{font-size:.8rem;opacity:.8;}
 .acciones button{margin-top:6px;background:#334155;}
@@ -42,6 +34,11 @@ button{
 
 <h1>LOG · Mensajería</h1>
 <div class="firma">Artificial Intelligence · by Mario Andrés Narváez Delgado</div>
+
+<div class="card">
+  <h3>Nombre de la empresa</h3>
+  <input id="empresa" placeholder="Domicilios a Tiempo del Sur" />
+</div>
 
 <div class="card">
   <h3>Nuevo Envío</h3>
@@ -64,23 +61,42 @@ button{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 let envios = JSON.parse(localStorage.getItem('envios')) || [];
+const empresaInput = document.getElementById('empresa');
 const clienteInput = document.getElementById('cliente');
 const direccionInput = document.getElementById('direccion');
 const mensajeroInput = document.getElementById('mensajero');
 const costoInput = document.getElementById('costo');
 const lista = document.getElementById('lista');
 
-function guardarEnvio(){
+function guardarEnvio(index){
   const cliente = clienteInput.value.trim();
   const direccion = direccionInput.value.trim();
   const mensajero = mensajeroInput.value.trim();
   const costo = costoInput.value.trim();
-  if(!cliente||!direccion||!mensajero||!costo){alert('Completa todos los campos');return;}
-  envios.push({cliente,direccion,mensajero,costo,estado:'Registrado',fecha:new Date().toLocaleString()});
+
+  if(!cliente || !direccion || !mensajero || !costo){alert('Completa todos los campos'); return;}
+
+  if(index != null){
+    envios[index] = {cliente,direccion,mensajero,costo,estado:envios[index].estado,fecha:envios[index].fecha};
+  } else {
+    envios.push({cliente,direccion,mensajero,costo,estado:'Registrado',fecha:new Date().toLocaleString()});
+  }
+
   localStorage.setItem('envios',JSON.stringify(envios));
   clienteInput.value=direccionInput.value=mensajeroInput.value=costoInput.value='';
   render();
 }
+
+function editarEnvio(i){
+  const e = envios[i];
+  clienteInput.value = e.cliente;
+  direccionInput.value = e.direccion;
+  mensajeroInput.value = e.mensajero;
+  costoInput.value = e.costo;
+  lista.scrollIntoView({behavior:'smooth'});
+  guardarEnvio.index = i;
+}
+
 function cambiarEstado(i){
   const estados=['Registrado','En ruta','Entregado'];
   const actual=estados.indexOf(envios[i].estado);
@@ -88,12 +104,15 @@ function cambiarEstado(i){
   localStorage.setItem('envios',JSON.stringify(envios));
   render();
 }
+
 function generarPDF(i){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const e = envios[i];
+  const nombreEmpresa = empresaInput.value || 'Domicilios a Tiempo del Sur';
+
   doc.setFontSize(16);
-  doc.text('LOG · Mensajería',20,20);
+  doc.text(nombreEmpresa,20,20);
   doc.setFontSize(10);
   doc.text('Artificial Intelligence',20,26);
   doc.text('by Mario Andrés Narváez Delgado',20,32);
@@ -107,21 +126,20 @@ function generarPDF(i){
   doc.rect(15,42,180,55);
   doc.save('comprobante_envio_LOG.pdf');
 }
+
 function render(){
   lista.innerHTML='';
   envios.forEach((e,i)=>{
     const div=document.createElement('div');
     div.className='envio';
-    div.innerHTML=`<strong>${e.cliente}</strong><br>${e.direccion}<br>👤 ${e.mensajero}<br>💲 ${e.costo}<br><span class="estado">${e.estado} · ${e.fecha}</span><div class="acciones"><button onclick="cambiarEstado(${i})">Cambiar estado</button><button onclick="generarPDF(${i})">PDF</button></div>`;
+    div.innerHTML=`<strong>${e.cliente}</strong><br>${e.direccion}<br>👤 ${e.mensajero}<br>💲 ${e.costo}<br><span class="estado">${e.estado} · ${e.fecha}</span><div class="acciones"><button onclick="cambiarEstado(${i})">Cambiar estado</button> <button onclick="editarEnvio(${i})">Editar</button> <button onclick="generarPDF(${i})">PDF</button></div>`;
     lista.appendChild(div);
   });
 }
 render();
 
 if('serviceWorker'in navigator){
-  window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').then(()=>console.log('SW registrado'));
-  });
+  window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').then(()=>console.log('SW registrado'))});
 }
 </script>
 </body>
